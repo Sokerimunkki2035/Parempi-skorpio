@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-N8Z8Z9M6');</script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Walking Scorpio</title>
+  
+  <style>
+    :root { 
+      --card-aspect-ratio: 1.35; 
+      --bg: #072b22; 
+      --accent: #1e6b54; 
+      --text-light: #78ffc8; 
+      --bg-image: none;
+    }
+
+    body { 
+      font-family: 'Segoe UI', sans-serif; 
+      background: var(--bg); 
+      background-image: var(--bg-image);
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      color: white; 
+      padding: 10px; 
+      margin: 0; 
+      user-select: none; 
+      min-height: 100vh;
+    }
+
+    .overlay {
+      background: rgba(0, 0, 0, 0.4);
+      min-height: 100vh;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+    
+    .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; }
+    .status-group { display: flex; gap: 8px; flex-wrap: wrap; }
+    .pill { background: rgba(0,0,0,0.6); padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 13px; border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; gap: 5px; backdrop-filter: blur(4px); }
+    
+    .controls { margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    button, select { padding: 8px 12px; cursor: pointer; background: var(--accent); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; font-weight: bold; }
+    select { background: rgba(0,0,0,0.7); }
+    
+    #info { margin-bottom: 15px; padding: 12px; background: rgba(0,0,0,0.6); border-radius: 8px; font-size: 14px; border-left: 5px solid var(--text-light); min-height: 1.2em; backdrop-filter: blur(4px); }
+    
+    #table { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; max-width: 900px; margin: 0 auto 30px; min-height: 400px; }
+    .column { background: rgba(0,0,0,0.25); border-radius: 4px; min-height: 60vh; position: relative; padding-bottom: 60px; border: 1px dashed rgba(255,255,255,0.15); backdrop-filter: blur(2px); }
+    
+    .card { background: white; border: 1px solid #222; border-radius: 5px; padding: 4px; margin-bottom: -36px; aspect-ratio: 1 / var(--card-aspect-ratio); font-size: 16px; font-weight: bold; cursor: pointer; position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.4); display: flex; flex-direction: column; box-sizing: border-box; color: black; }
+    
+    .suit-spade { color: #000000; }
+    .suit-club { color: #5a5a5a; }
+    .suit-heart { color: #d32f2f; }
+    .suit-diamond { color: #e67e22; }
+
+    .mini-suit { font-size: 0.75em; margin-left: 2px; vertical-align: middle; }
+    .card-suit-large { position: absolute; bottom: 2px; right: 4px; font-size: 1.6em; opacity: 0.8; }
+    
+    .card.face-down { background: #134537; color: transparent; border: 1px solid rgba(255,255,255,0.1); }
+    .card.selected { outline: 4px solid #ffeb3b; z-index: 100; transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.5); }
+
+    footer { margin-top: 40px; padding: 20px; opacity: 0.8; font-size: 12px; border-top: 1px solid var(--accent); text-align: center; background: rgba(0,0,0,0.4); }
+  </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-N8Z8Z9M6" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<div class="overlay">
+  <div class="header-row">
+      <h2 style="margin:0; color:var(--text-light);">🦂 Walking Scorpio</h2>
+      <div class="status-group">
+          <div class="pill">🔄 Siirrot: <span id="actualMovesUI">0</span></div>
+          <div class="pill">🎮 Pelit: <span id="gamesPlayedUI">0</span></div>
+          <div class="pill">🏆 Voitot: <span id="gamesWonUI">0</span> (<span id="winRateUI">0%</span>)</div>
+          <div class="pill">⭐ Paras: <span id="bestScoreUI">-</span></div>
+      </div>
+  </div>
+
+  <div class="controls">
+    <button onclick="newGame()">Uusi peli</button>
+    <button id="stockBtn" onclick="dealStock()">VARA (3)</button>
+    <button onclick="undoMove()" style="background: #444;">Peru</button>
+    
+    <!-- Luontotaustakuvien valikko -->
+    <select id="bgSelect" onchange="changeBackground(this.value)">
+      <option value="default">🌲 Vihreä (Vakio)</option>
+      <option value="forest">🌲 Havumetsä</option>
+      <option value="mountain">🏔️ Syksyinen Vuoristo</option>
+      <option value="lake">🌅 Tyynehkö Järvi</option>
+    </select>
+
+    <button onclick="resetStats()" style="background: #721c24; font-size:11px;">Nollaa tilastot</button>
+  </div>
+
+  <div id="info">Ladataan...</div>
+  <div id="table"></div>
+
+  <footer>&copy; 2026 Walking Games - Itsmyid Oy</footer>
+</div>
+
+<script>
+let deck = [], columns = [[],[],[],[],[],[],[]], stock = [], moveHistory = [];
+let selectedCol = -1, selectedIdx = -1, actualMovesCount = 0;
+let gameFinished = false;
+
+// Tilastomuuttujat
+let stats = {
+  played: 0,
+  won: 0,
+  bestMoves: null
+};
+
+function init() { 
+  loadStats();
+  loadSavedBg();
+  newGame(); 
+}
+
+// Tilastojen lataus localStoragesta
+function loadStats() {
+  const saved = localStorage.getItem('scorpio_stats');
+  if (saved) {
+    stats = JSON.parse(saved);
+  }
+  updateStatsUI();
+}
+
+// Tilastojen tallennus
+function saveStats() {
+  localStorage.setItem('scorpio_stats', JSON.stringify(stats));
+  updateStatsUI();
+}
+
+function updateStatsUI() {
+  document.getElementById("gamesPlayedUI").innerText = stats.played;
+  document.getElementById("gamesWonUI").innerText = stats.won;
+  const rate = stats.played > 0 ? Math.round((stats.won / stats.played) * 100) : 0;
+  document.getElementById("winRateUI").innerText = rate + "%";
+  document.getElementById("bestScoreUI").innerText = stats.bestMoves !== null ? stats.bestMoves : "-";
+}
+
+function resetStats() {
+  if (confirm("Haluatko varmasti nollata kaikki pelitilastot?")) {
+    stats = { played: 0, won: 0, bestMoves: null };
+    saveStats();
+  }
+}
+
+// Taustakuvien hallinta
+const bgUrls = {
+  default: '',
+  forest: 'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1920&q=80',
+  mountain: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80',
+  lake: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1920&q=80'
+};
+
+function changeBackground(key) {
+  const url = bgUrls[key] || '';
+  if (url) {
+    document.documentElement.style.setProperty('--bg-image', `url('${url}')`);
+  } else {
+    document.documentElement.style.setProperty('--bg-image', 'none');
+  }
+  localStorage.setItem('scorpio_bg', key);
+}
+
+function loadSavedBg() {
+  const savedBg = localStorage.getItem('scorpio_bg') || 'default';
+  document.getElementById("bgSelect").value = savedBg;
+  changeBackground(savedBg);
+}
+
+function newGame() {
+    deck = [];
+    gameFinished = false;
+    
+    // Kasvatetaan pelattujen pelien määrää
+    stats.played++;
+    saveStats();
+
+    const suits = ['♠', '♣', '♥', '♦'];
+    for (let s of suits) for (let r = 1; r <= 13; r++) deck.push({ rank: r, suit: s, faceUp: false });
+    deck.sort(() => Math.random() - 0.5);
+    
+    columns = [[],[],[],[],[],[],[]];
+    for (let i = 0; i < 49; i++) {
+        let c = i % 7;
+        let card = deck.pop();
+        card.faceUp = !(c < 3 && columns[c].length < 3);
+        columns[c].push(card);
+    }
+    
+    stock = deck; 
+    selectedCol = -1; selectedIdx = -1; actualMovesCount = 0; moveHistory = [];
+    document.getElementById("info").innerText = "Peli valmis! Onnea matkaan.";
+    updateUI();
+}
+
+function updateUI() {
+    drawTable();
+    document.getElementById("stockBtn").innerText = `VARA (${stock.length})`;
+    document.getElementById("actualMovesUI").innerText = actualMovesCount;
+    checkWin();
+}
+
+function drawTable() {
+    const table = document.getElementById("table");
+    table.innerHTML = "";
+    columns.forEach((col, cIdx) => {
+        let colDiv = document.createElement("div");
+        colDiv.className = "column";
+        colDiv.onclick = () => handleColumnClick(cIdx);
+        col.forEach((card, rIdx) => {
+            let cardDiv = document.createElement("div");
+            cardDiv.className = "card" + (!card.faceUp ? " face-down" : "");
+            if (cIdx === selectedCol && rIdx >= selectedIdx) cardDiv.classList.add("selected");
+            if (card.faceUp) {
+                cardDiv.classList.add(getSuitClass(card.suit));
+                cardDiv.innerHTML = `<div>${getRankName(card.rank)}<span class="mini-suit">${card.suit}</span></div><div class="card-suit-large">${card.suit}</div>`;
+                cardDiv.onclick = (e) => { e.stopPropagation(); handleCardClick(cIdx, rIdx); };
+            }
+            colDiv.appendChild(cardDiv);
+        });
+        table.appendChild(colDiv);
+    });
+}
+
+function handleCardClick(cIdx, rIdx) {
+    if (selectedCol !== -1 && selectedCol !== cIdx) { handleColumnClick(cIdx); return; }
+    if (selectedCol === cIdx && selectedIdx === rIdx) { selectedCol = -1; selectedIdx = -1; } 
+    else { selectedCol = cIdx; selectedIdx = rIdx; }
+    drawTable();
+}
+
+function handleColumnClick(targetCol) {
+    if (selectedCol === -1) return;
+    const movingCard = columns[selectedCol][selectedIdx];
+    const targetColCards = columns[targetCol];
+    let canMove = false;
+    let shouldCountMove = false;
+
+    if (targetColCards.length === 0) {
+        if (movingCard.rank === 13) {
+            canMove = true;
+            if (selectedIdx !== 0) shouldCountMove = true;
+        }
+    } else {
+        const lastCard = targetColCards[targetColCards.length - 1];
+        if (lastCard.rank === movingCard.rank + 1 && lastCard.suit === movingCard.suit) {
+            canMove = true;
+            shouldCountMove = true;
+        }
+    }
+
+    if (canMove && selectedCol !== targetCol) {
+        moveHistory.push(JSON.parse(JSON.stringify({cols: columns, stock: stock, moves: actualMovesCount})));
+        if (shouldCountMove) actualMovesCount++;
+        const cardsToMove = columns[selectedCol].splice(selectedIdx);
+        columns[targetCol] = [...columns[targetCol], ...cardsToMove];
+        if (columns[selectedCol].length > 0) columns[selectedCol][columns[selectedCol].length - 1].faceUp = true;
+        checkSequence(targetCol);
+    }
+    selectedCol = -1; selectedIdx = -1; updateUI();
+}
+
+function checkSequence(cIdx) {
+    const col = columns[cIdx];
+    if (col.length < 13) return;
+    for (let i = 0; i <= col.length - 13; i++) {
+        let sub = col.slice(i, i + 13);
+        if (sub.every((c, idx) => c.faceUp && c.rank === (13 - idx) && c.suit === sub[0].suit)) {
+            col.splice(i, 13);
+            if (col.length > 0) col[col.length - 1].faceUp = true;
+            break;
+        }
+    }
+}
+
+function checkWin() {
+    if (columns.every(col => col.length === 0) && stock.length === 0 && !gameFinished) {
+        gameFinished = true;
+        document.getElementById("info").innerHTML = "<span style='color:#78ffc8; font-size: 18px; font-weight: bold;'>🎉 Onneksi olkoon! Lauta on tyhjä! 🎉</span>";
+        
+        // Päivitetään voittotilastot
+        stats.won++;
+        if (stats.bestMoves === null || actualMovesCount < stats.bestMoves) {
+          stats.bestMoves = actualMovesCount;
+        }
+        saveStats();
+
+        // Soitetaan voittofanfaari
+        playFanfare();
+    }
+}
+
+function playFanfare() {
+  try {
+    const audio = new Audio('https://cdn.pixabay.com/download/audio/2021/08/04/audio_bb630cc098.mp3?filename=success-fanfare-trumpets-6001.mp3');
+    audio.play().catch(e => console.log("Äänen toisto estetty selaimessa:", e));
+  } catch(e) {
+    console.log("Äänielementin virhe:", e);
+  }
+}
+
+function dealStock() {
+    if (stock.length > 0) {
+        moveHistory.push(JSON.parse(JSON.stringify({cols: columns, stock: stock, moves: actualMovesCount})));
+        for (let i = 0; i < 3; i++) { if(stock.length) { let c = stock.pop(); c.faceUp = true; columns[i].push(c); } }
+        actualMovesCount++;
+        updateUI();
+    }
+}
+
+function undoMove() {
+    if (moveHistory.length > 0) {
+        let prev = moveHistory.pop();
+        columns = prev.cols; stock = prev.stock; actualMovesCount = prev.moves || 0;
+        selectedCol = -1; updateUI();
+    }
+}
+
+function getSuitClass(s) { return {'♠':'suit-spade','♣':'suit-club','♥':'suit-heart','♦':'suit-diamond'}[s]; }
+function getRankName(r) { return {1:'A',11:'J',12:'Q',13:'K'}[r] || r; }
+
+window.onload = init;
+</script>
+</body>
+</html>
