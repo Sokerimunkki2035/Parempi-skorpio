@@ -1,15 +1,21 @@
 <!DOCTYPE html>
 <html lang="fi">
 <head>
+  <!-- Google Tag Manager -->
   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
   new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
   j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
   })(window,document,'script','dataLayer','GTM-N8Z8Z9M6');</script>
+
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Walking Scorpio</title>
-  
+
+  <meta name="robots" content="index, follow">
+  <meta name="description" content="Walking Scorpio - Scorpio Solitaire korttipeli selaimessa taustavideoilla ja -kuvilla.">
+  <meta name="author" content="Itsmyid Oy / Walking Games">
+
   <style>
     :root { 
       --card-aspect-ratio: 1.35; 
@@ -31,10 +37,26 @@
       margin: 0; 
       user-select: none; 
       min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    #bgVideo {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      min-width: 100%;
+      min-height: 100%;
+      width: auto;
+      height: auto;
+      z-index: -2;
+      transform: translate(-50%, -50%);
+      object-fit: cover;
+      display: none;
+      opacity: 0.65;
     }
 
     .overlay {
-      background: rgba(0, 0, 0, 0.4);
+      background: rgba(0, 0, 0, 0.45);
       min-height: 100vh;
       padding: 10px;
       box-sizing: border-box;
@@ -42,16 +64,40 @@
     
     .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; }
     .status-group { display: flex; gap: 8px; flex-wrap: wrap; }
-    .pill { background: rgba(0,0,0,0.6); padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 13px; border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; gap: 5px; backdrop-filter: blur(4px); }
+    .pill { background: rgba(0,0,0,0.65); padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 13px; border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; gap: 5px; backdrop-filter: blur(4px); }
     
-    .controls { margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .controls { margin-bottom: 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
     button, select { padding: 8px 12px; cursor: pointer; background: var(--accent); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; font-weight: bold; }
-    select { background: rgba(0,0,0,0.7); }
+    select { background: rgba(0,0,0,0.8); }
     
-    #info { margin-bottom: 15px; padding: 12px; background: rgba(0,0,0,0.6); border-radius: 8px; font-size: 14px; border-left: 5px solid var(--text-light); min-height: 1.2em; backdrop-filter: blur(4px); }
+    /* Pelin sujumisen arviointipalkki */
+    .flow-rating-bar {
+      background: rgba(0,0,0,0.6);
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      border: 1px solid rgba(255,255,255,0.15);
+      backdrop-filter: blur(4px);
+    }
+    .flow-title { font-size: 13px; font-weight: bold; color: var(--text-light); }
+    .eval-btn { padding: 5px 8px; font-size: 13px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; cursor: pointer; color: white; transition: 0.2s; }
+    .eval-btn:hover { background: rgba(255,255,255,0.25); }
+    .eval-btn.active-good { background: #1e7e34; border-color: #28a745; font-weight: bold; }
+    .eval-btn.active-bad { background: #bd2130; border-color: #dc3545; font-weight: bold; }
+
+    .like-btn { padding: 6px 10px; font-size: 14px; background: rgba(0,0,0,0.7); border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; cursor: pointer; transition: 0.2s; }
+    .like-btn:hover { background: rgba(255,255,255,0.2); }
+    .like-btn.active-like { background: #1e7e34; border-color: #28a745; }
+    .like-btn.active-dislike { background: #bd2130; border-color: #dc3545; }
+
+    #info { margin-bottom: 15px; padding: 12px; background: rgba(0,0,0,0.65); border-radius: 8px; font-size: 14px; border-left: 5px solid var(--text-light); min-height: 1.2em; backdrop-filter: blur(4px); }
     
     #table { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; max-width: 900px; margin: 0 auto 30px; min-height: 400px; }
-    .column { background: rgba(0,0,0,0.25); border-radius: 4px; min-height: 60vh; position: relative; padding-bottom: 60px; border: 1px dashed rgba(255,255,255,0.15); backdrop-filter: blur(2px); }
+    .column { background: rgba(0,0,0,0.3); border-radius: 4px; min-height: 60vh; position: relative; padding-bottom: 60px; border: 1px dashed rgba(255,255,255,0.15); backdrop-filter: blur(2px); }
     
     .card { background: white; border: 1px solid #222; border-radius: 5px; padding: 4px; margin-bottom: -36px; aspect-ratio: 1 / var(--card-aspect-ratio); font-size: 16px; font-weight: bold; cursor: pointer; position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.4); display: flex; flex-direction: column; box-sizing: border-box; color: black; }
     
@@ -66,11 +112,13 @@
     .card.face-down { background: #134537; color: transparent; border: 1px solid rgba(255,255,255,0.1); }
     .card.selected { outline: 4px solid #ffeb3b; z-index: 100; transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.5); }
 
-    footer { margin-top: 40px; padding: 20px; opacity: 0.8; font-size: 12px; border-top: 1px solid var(--accent); text-align: center; background: rgba(0,0,0,0.4); }
+    footer { margin-top: 40px; padding: 20px; opacity: 0.8; font-size: 12px; border-top: 1px solid var(--accent); text-align: center; background: rgba(0,0,0,0.5); }
   </style>
 </head>
 <body>
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-N8Z8Z9M6" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<video autoplay muted loop playsinline id="bgVideo"></video>
 
 <div class="overlay">
   <div class="header-row">
@@ -88,15 +136,49 @@
     <button id="stockBtn" onclick="dealStock()">VARA (3)</button>
     <button onclick="undoMove()" style="background: #444;">Peru</button>
     
-    <!-- Luontotaustakuvien valikko -->
     <select id="bgSelect" onchange="changeBackground(this.value)">
-      <option value="default">🌲 Vihreä (Vakio)</option>
-      <option value="forest">🌲 Havumetsä</option>
-      <option value="mountain">🏔️ Syksyinen Vuoristo</option>
-      <option value="lake">🌅 Tyynehkö Järvi</option>
+      <optgroup label="Kuvat">
+        <option value="default">🌲 Vihreä (Vakio)</option>
+        <option value="forest">🌲 Havumetsä</option>
+        <option value="mountain">🏔️ Syksyinen Vuoristo</option>
+        <option value="lake">🌅 Tyynehkö Järvi</option>
+      </optgroup>
+      <optgroup label="Videot (ADHD / Relax)">
+        <option value="v_fire">🔥 Takkatuli</option>
+        <option value="v_aquarium">🐠 Akvaario & Kalat</option>
+        <option value="v_rain">🌧️ Sadepisarat</option>
+        <option value="v_space">🌌 Avaruus & Hiukkaset</option>
+        <option value="v_waterfall">🌊 Vesiputous</option>
+      </optgroup>
     </select>
 
+    <button id="btnLike" class="like-btn" onclick="rateMedia('like')" title="Tykkää taustasta">👍</button>
+    <button id="btnDislike" class="like-btn" onclick="rateMedia('dislike')" title="En pidä tästä taustasta">👎</button>
+
     <button onclick="resetStats()" style="background: #721c24; font-size:11px;">Nollaa tilastot</button>
+  </div>
+
+  <!-- Pelin sujumisen arviointi (1-5 hyvää peukkua ja 1-5 huonoa peukkua) -->
+  <div class="flow-rating-bar">
+    <span class="flow-title">Hyvä sujuminen:</span>
+    <div style="display:flex; gap:4px;">
+      <button class="eval-btn good-btn" onclick="setFlowRating('good', 1)">1👍</button>
+      <button class="eval-btn good-btn" onclick="setFlowRating('good', 2)">2👍</button>
+      <button class="eval-btn good-btn" onclick="setFlowRating('good', 3)">3👍</button>
+      <button class="eval-btn good-btn" onclick="setFlowRating('good', 4)">4👍</button>
+      <button class="eval-btn good-btn" onclick="setFlowRating('good', 5)">5👍</button>
+    </div>
+
+    <span style="opacity:0.4; font-size:12px;">|</span>
+
+    <span class="flow-title">Huono sujuminen:</span>
+    <div style="display:flex; gap:4px;">
+      <button class="eval-btn bad-btn" onclick="setFlowRating('bad', 1)">1👎</button>
+      <button class="eval-btn bad-btn" onclick="setFlowRating('bad', 2)">2👎</button>
+      <button class="eval-btn bad-btn" onclick="setFlowRating('bad', 3)">3👎</button>
+      <button class="eval-btn bad-btn" onclick="setFlowRating('bad', 4)">4👎</button>
+      <button class="eval-btn bad-btn" onclick="setFlowRating('bad', 5)">5👎</button>
+    </div>
   </div>
 
   <div id="info">Ladataan...</div>
@@ -110,29 +192,38 @@ let deck = [], columns = [[],[],[],[],[],[],[]], stock = [], moveHistory = [];
 let selectedCol = -1, selectedIdx = -1, actualMovesCount = 0;
 let gameFinished = false;
 
-// Tilastomuuttujat
-let stats = {
-  played: 0,
-  won: 0,
-  bestMoves: null
+let stats = { played: 0, won: 0, bestMoves: null };
+let ratings = {}; 
+let currentFlowEval = { type: null, level: null }; // { type: 'good' | 'bad', level: 1-5 }
+
+const mediaLibrary = {
+  default: { type: 'img', url: '' },
+  forest: { type: 'img', url: 'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1920&q=80' },
+  mountain: { type: 'img', url: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80' },
+  lake: { type: 'img', url: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1920&q=80' },
+  
+  v_fire: { type: 'video', url: 'https://cdn.pixabay.com/video/2021/04/12/70882-536968832_large.mp4' },
+  v_aquarium: { type: 'video', url: 'https://cdn.pixabay.com/video/2020/05/25/40149-425026402_large.mp4' },
+  v_rain: { type: 'video', url: 'https://cdn.pixabay.com/video/2020/06/16/42220-432242171_large.mp4' },
+  v_space: { type: 'video', url: 'https://cdn.pixabay.com/video/2019/04/23/23011-332483109_large.mp4' },
+  v_waterfall: { type: 'video', url: 'https://cdn.pixabay.com/video/2019/05/18/23673-336712395_large.mp4' }
 };
+
+let currentBgKey = 'default';
 
 function init() { 
   loadStats();
+  loadRatings();
   loadSavedBg();
   newGame(); 
 }
 
-// Tilastojen lataus localStoragesta
 function loadStats() {
   const saved = localStorage.getItem('scorpio_stats');
-  if (saved) {
-    stats = JSON.parse(saved);
-  }
+  if (saved) stats = JSON.parse(saved);
   updateStatsUI();
 }
 
-// Tilastojen tallennus
 function saveStats() {
   localStorage.setItem('scorpio_stats', JSON.stringify(stats));
   updateStatsUI();
@@ -153,22 +244,92 @@ function resetStats() {
   }
 }
 
-// Taustakuvien hallinta
-const bgUrls = {
-  default: '',
-  forest: 'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1920&q=80',
-  mountain: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80',
-  lake: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1920&q=80'
-};
+// Pelin sujumisen arviointi (1-5 hyvä / 1-5 huono)
+function setFlowRating(type, level) {
+  if (currentFlowEval.type === type && currentFlowEval.level === level) {
+    currentFlowEval = { type: null, level: null };
+  } else {
+    currentFlowEval = { type: type, level: level };
+  }
+  updateFlowUI();
+  saveGameFlow();
+}
+
+function updateFlowUI() {
+  const goodBtns = document.querySelectorAll(".good-btn");
+  const badBtns = document.querySelectorAll(".bad-btn");
+
+  goodBtns.forEach((btn, idx) => {
+    btn.classList.remove("active-good");
+    if (currentFlowEval.type === 'good' && currentFlowEval.level === (idx + 1)) {
+      btn.classList.add("active-good");
+    }
+  });
+
+  badBtns.forEach((btn, idx) => {
+    btn.classList.remove("active-bad");
+    if (currentFlowEval.type === 'bad' && currentFlowEval.level === (idx + 1)) {
+      btn.classList.add("active-bad");
+    }
+  });
+}
+
+function saveGameFlow() {
+  localStorage.setItem(`scorpio_flow_game_${stats.played}`, JSON.stringify(currentFlowEval));
+}
+
+function loadRatings() {
+  const saved = localStorage.getItem('scorpio_ratings');
+  if (saved) ratings = JSON.parse(saved);
+}
+
+function rateMedia(type) {
+  if (currentBgKey === 'default') return;
+
+  if (ratings[currentBgKey] === type) {
+    delete ratings[currentBgKey];
+  } else {
+    ratings[currentBgKey] = type;
+  }
+  
+  localStorage.setItem('scorpio_ratings', JSON.stringify(ratings));
+  updateRatingButtons();
+}
+
+function updateRatingButtons() {
+  const btnLike = document.getElementById("btnLike");
+  const btnDislike = document.getElementById("btnDislike");
+  
+  btnLike.classList.remove('active-like');
+  btnDislike.classList.remove('active-dislike');
+
+  const currentRating = ratings[currentBgKey];
+  if (currentRating === 'like') btnLike.classList.add('active-like');
+  if (currentRating === 'dislike') btnDislike.classList.add('active-dislike');
+}
 
 function changeBackground(key) {
-  const url = bgUrls[key] || '';
-  if (url) {
-    document.documentElement.style.setProperty('--bg-image', `url('${url}')`);
-  } else {
+  currentBgKey = key;
+  const media = mediaLibrary[key] || mediaLibrary.default;
+  const videoEl = document.getElementById("bgVideo");
+
+  if (media.type === 'video') {
     document.documentElement.style.setProperty('--bg-image', 'none');
+    videoEl.src = media.url;
+    videoEl.style.display = 'block';
+    videoEl.play().catch(e => console.log("Videotoisto vaatii vuorovaikutuksen:", e));
+  } else {
+    videoEl.pause();
+    videoEl.style.display = 'none';
+    if (media.url) {
+      document.documentElement.style.setProperty('--bg-image', `url('${media.url}')`);
+    } else {
+      document.documentElement.style.setProperty('--bg-image', 'none');
+    }
   }
+
   localStorage.setItem('scorpio_bg', key);
+  updateRatingButtons();
 }
 
 function loadSavedBg() {
@@ -180,8 +341,9 @@ function loadSavedBg() {
 function newGame() {
     deck = [];
     gameFinished = false;
+    currentFlowEval = { type: null, level: null };
+    updateFlowUI();
     
-    // Kasvatetaan pelattujen pelien määrää
     stats.played++;
     saveStats();
 
@@ -288,14 +450,12 @@ function checkWin() {
         gameFinished = true;
         document.getElementById("info").innerHTML = "<span style='color:#78ffc8; font-size: 18px; font-weight: bold;'>🎉 Onneksi olkoon! Lauta on tyhjä! 🎉</span>";
         
-        // Päivitetään voittotilastot
         stats.won++;
         if (stats.bestMoves === null || actualMovesCount < stats.bestMoves) {
           stats.bestMoves = actualMovesCount;
         }
         saveStats();
 
-        // Soitetaan voittofanfaari
         playFanfare();
     }
 }
